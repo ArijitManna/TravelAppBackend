@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="TravelApp.API/TravelApp.API.csproj" />
+  <Project Path="TravelApp.Application/TravelApp.Application.csproj" />
+  <Project Path="TravelApp.Domain/TravelApp.Domain.csproj" />
+  <Project Path="TravelApp.Infrastructure/TravelApp.Infrastructure.csproj" />
+</Solution>

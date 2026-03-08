@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: travelapp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: travelapp_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Admin}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./create_database.sql:/docker-entrypoint-initdb.d/create_database.sql
+    networks:
+      - travelapp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d travelapp_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Travel App API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: travelapp-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=travelapp_db;Username=postgres;Password=${DB_PASSWORD:-Admin}
+      JwtSettings__SecretKey: ${JWT_SECRET_KEY:-YourSuperSecretKeyForJWTTokenGeneration123456789}
+      JwtSettings__Issuer: ${JWT_ISSUER:-TravelAppAPI}
+      JwtSettings__Audience: ${JWT_AUDIENCE:-TravelAppClient}
+      JwtSettings__ExpiryInMinutes: ${JWT_EXPIRY:-60}
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - travelapp-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  travelapp-network:
+    driver: bridge
