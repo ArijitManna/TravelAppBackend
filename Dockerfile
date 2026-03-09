@@ -26,6 +26,7 @@ RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+RUN apt-get update && apt-get install -y curl
 
 # Create non-root user
 RUN groupadd -r appuser && useradd -r -g appuser appuser
