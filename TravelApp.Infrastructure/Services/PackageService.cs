@@ -98,8 +98,8 @@ public class PackageService : IPackageService
             Category = request.Category,
             IsFeatured = request.IsFeatured,
             IsActive = true,
-            StartDate = request.StartDate,
-            EndDate = request.EndDate,
+            StartDate = request.StartDate.HasValue ? DateTime.SpecifyKind(request.StartDate.Value, DateTimeKind.Utc) : null,
+            EndDate = request.EndDate.HasValue ? DateTime.SpecifyKind(request.EndDate.Value, DateTimeKind.Utc) : null,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -205,7 +205,26 @@ public class PackageService : IPackageService
         }
 
         _context.Packages.Add(package);
-        await _context.SaveChangesAsync();
+        
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // Get detailed error information including inner exceptions
+            var errorMessage = ex.Message;
+            var innerException = ex.InnerException;
+            var detailedError = errorMessage;
+            
+            while (innerException != null)
+            {
+                detailedError += $" | Inner Exception: {innerException.Message}";
+                innerException = innerException.InnerException;
+            }
+            
+            throw new Exception($"Database save failed: {detailedError}", ex);
+        }
 
         // Reload with includes
         return (await GetByIdAsync(package.Id))!;
@@ -250,8 +269,8 @@ public class PackageService : IPackageService
         package.Category = request.Category;
         package.IsFeatured = request.IsFeatured;
         package.IsActive = request.IsActive;
-        package.StartDate = request.StartDate;
-        package.EndDate = request.EndDate;
+        package.StartDate = request.StartDate.HasValue ? DateTime.SpecifyKind(request.StartDate.Value, DateTimeKind.Utc) : null;
+        package.EndDate = request.EndDate.HasValue ? DateTime.SpecifyKind(request.EndDate.Value, DateTimeKind.Utc) : null;
 
         // Update images - remove old, add new
         _context.PackageImages.RemoveRange(package.PackageImages);
@@ -361,7 +380,25 @@ public class PackageService : IPackageService
             package.ItineraryDays.Add(itineraryDay);
         }
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // Get detailed error information including inner exceptions
+            var errorMessage = ex.Message;
+            var innerException = ex.InnerException;
+            var detailedError = errorMessage;
+            
+            while (innerException != null)
+            {
+                detailedError += $" | Inner Exception: {innerException.Message}";
+                innerException = innerException.InnerException;
+            }
+            
+            throw new Exception($"Database update failed: {detailedError}", ex);
+        }
 
         // Reload with includes
         return (await GetByIdAsync(package.Id))!;
