@@ -49,6 +49,7 @@ builder.Services.AddScoped<IDestinationService, DestinationService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
